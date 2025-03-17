@@ -48,7 +48,8 @@ public class Dvigalo
             else
             {
                 Zahteve.Dequeue();
-                TrenutnaObremenitev = Math.Max(0, TrenutnaObremenitev - new Random().Next(1, 4)); 
+                TrenutnaObremenitev = Math.Max(0, TrenutnaObremenitev - new Random().Next(1, 4)); // Izstopijo potniki
+            }
         }
     }
 
