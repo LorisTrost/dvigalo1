@@ -124,8 +124,8 @@ public class Dvigalo
 
             if (TrenutnoNadstropje == ciljnoNadstropje)
             {
-                Zahteve.Dequeue();  // Odstrani to zahtevo
-                TrenutnaObremenitev = Math.Max(0, TrenutnaObremenitev - steviloPotnikov);  // Izstop potnikov
+                Zahteve.Dequeue();  
+                TrenutnaObremenitev = Math.Max(0, TrenutnaObremenitev - steviloPotnikov);  
                 Console.WriteLine($"Dvigalo {Id} je pripeljalo potnike v nadstropje {ciljnoNadstropje}.");
             }
         }
