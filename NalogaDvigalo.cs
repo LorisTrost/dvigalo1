@@ -1,13 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-
-
-// Razred ElevatorSystem
-
 
 class Program
 {
@@ -15,11 +8,11 @@ class Program
     {
         SistemDvigal sistem = new SistemDvigal(3, 10);
 
-        sistem.ZahtevajDvigalo(5, 3);
-        sistem.ZahtevajDvigalo(7, 4);
-        sistem.ZahtevajDvigalo(2, 2);
-        sistem.ZahtevajDvigalo(9, 5);
-        sistem.ZahtevajDvigalo(0, 6); 
+        sistem.ZahtevajDvigalo(5, 8, 3);  
+        sistem.ZahtevajDvigalo(7, 2, 4); 
+        sistem.ZahtevajDvigalo(2, 9, 2);  
+        sistem.ZahtevajDvigalo(9, 0, 5);  
+        sistem.ZahtevajDvigalo(0, 4, 6); 
 
         for (int i = 0; i < 15; i++)
         {
@@ -29,6 +22,7 @@ class Program
         }
     }
 }
+
 public class SistemDvigal
 {
     private List<Dvigalo> Dvigala;
@@ -44,7 +38,7 @@ public class SistemDvigal
         }
     }
 
-    public void ZahtevajDvigalo(int nadstropje, int steviloPotnikov)
+    public void ZahtevajDvigalo(int izNadstropja, int vNadstropje, int steviloPotnikov)
     {
         var naVoljo = Dvigala.Where(d => d.LahkoSprejmePotnike(steviloPotnikov)).ToList();
         if (naVoljo.Count == 0)
@@ -53,22 +47,12 @@ public class SistemDvigal
             return;
         }
 
-        Dvigalo najblizjeDvigalo;
+        Dvigalo najblizjeDvigalo = naVoljo
+            .OrderBy(d => Math.Abs(d.TrenutnoNadstropje - izNadstropja))  
+            .ThenBy(d => d.Zahteve.Count)
+            .First();
 
-        if (nadstropje == 0)
-        {
-            najblizjeDvigalo = naVoljo.OrderBy(d => d.Zahteve.Count).First();
-        }
-        else
-        {
-            najblizjeDvigalo = naVoljo
-                .OrderBy(d => Math.Abs(d.TrenutnoNadstropje - nadstropje))
-                .ThenBy(d => d.Zahteve.Count)
-                .First();
-        }
-
-        najblizjeDvigalo.ZahtevajNadstropje(nadstropje);
-        najblizjeDvigalo.DodajPotnike(steviloPotnikov);
+        najblizjeDvigalo.ZahtevajNadstropje(vNadstropje, izNadstropja, steviloPotnikov);
     }
 
     public void KorakSimulacije()
@@ -83,34 +67,35 @@ public class SistemDvigal
     {
         foreach (var dvigalo in Dvigala)
         {
-            Console.WriteLine($"Dvigalo ID: {dvigalo.Id}, Nadstropje: {dvigalo.TrenutnoNadstropje}, " +
+            Console.WriteLine($"Dvigalo ID: {dvigalo.Id}, Trenutno nadstropje: {dvigalo.TrenutnoNadstropje}, " +
                               $"Premika se gor: {dvigalo.PremikaSeGor}, Potniki: {dvigalo.TrenutnaObremenitev}/{dvigalo.Kapaciteta}");
         }
     }
 }
+
 public class Dvigalo
 {
     public int Id { get; }
     public int TrenutnoNadstropje { get; private set; }
     public bool PremikaSeGor { get; private set; }
-    public Queue<int> Zahteve { get; }
+    public Queue<(int ciljnoNadstropje, int izNadstropja, int steviloPotnikov)> Zahteve { get; }  
     public int Kapaciteta { get; }
     public int TrenutnaObremenitev { get; private set; }
 
     public Dvigalo(int id)
     {
         Id = id;
-        TrenutnoNadstropje = 0;
-        Zahteve = new Queue<int>();
+        TrenutnoNadstropje = new Random().Next(0, 10);  
+        Zahteve = new Queue<(int, int, int)>();
         Kapaciteta = 10;
         TrenutnaObremenitev = 0;
     }
 
-    public void ZahtevajNadstropje(int nadstropje)
+    public void ZahtevajNadstropje(int vNadstropje, int izNadstropja, int steviloPotnikov)
     {
-        if (!Zahteve.Contains(nadstropje))
+        if (!Zahteve.Contains((vNadstropje, izNadstropja, steviloPotnikov)))
         {
-            Zahteve.Enqueue(nadstropje);
+            Zahteve.Enqueue((vNadstropje, izNadstropja, steviloPotnikov)); 
         }
     }
 
@@ -118,7 +103,8 @@ public class Dvigalo
     {
         if (Zahteve.Count > 0)
         {
-            int ciljnoNadstropje = Zahteve.Peek();
+            var (ciljnoNadstropje, izNadstropja, steviloPotnikov) = Zahteve.Peek();
+
             if (TrenutnoNadstropje < ciljnoNadstropje)
             {
                 TrenutnoNadstropje++;
@@ -129,21 +115,25 @@ public class Dvigalo
                 TrenutnoNadstropje--;
                 PremikaSeGor = false;
             }
-            else
+
+            if (TrenutnoNadstropje == izNadstropja)
             {
-                Zahteve.Dequeue();
-                TrenutnaObremenitev = Math.Max(0, TrenutnaObremenitev - new Random().Next(1, 4));
+                TrenutnaObremenitev += steviloPotnikov;
+                Console.WriteLine($"Dvigalo {Id} pobira {steviloPotnikov} potnikov iz nadstropja {izNadstropja}.");
+            }
+
+            if (TrenutnoNadstropje == ciljnoNadstropje)
+            {
+                Zahteve.Dequeue();  // Odstrani to zahtevo
+                TrenutnaObremenitev = Math.Max(0, TrenutnaObremenitev - steviloPotnikov);  // Izstop potnikov
+                Console.WriteLine($"Dvigalo {Id} je pripeljalo potnike v nadstropje {ciljnoNadstropje}.");
             }
         }
     }
 
+
     public bool LahkoSprejmePotnike(int stevilo)
     {
         return (TrenutnaObremenitev + stevilo) <= Kapaciteta;
-    }
-
-    public void DodajPotnike(int stevilo)
-    {
-        TrenutnaObremenitev = Math.Min(Kapaciteta, TrenutnaObremenitev + stevilo);
     }
 }
