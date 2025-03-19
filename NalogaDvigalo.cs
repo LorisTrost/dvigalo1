@@ -8,14 +8,13 @@ class Program
     {
         SistemDvigal sistem = new SistemDvigal(3, 10);
 
-        // Dodamo nekaj zahtev za dvigala
         sistem.ZahtevajDvigalo(2, 7, 4);
         sistem.ZahtevajDvigalo(5, 1, 3);
         sistem.ZahtevajDvigalo(8, 0, 5);
         sistem.ZahtevajDvigalo(3, 9, 2);
         sistem.ZahtevajDvigalo(6, 4, 6);
 
-        for (int i = 0; i < 20; i++)  // Več korakov za testiranje
+        for (int i = 0; i < 20; i++)
         {
             Console.WriteLine($"Korak {i + 1}:");
             sistem.KorakSimulacije();
@@ -87,7 +86,7 @@ public class Dvigalo
     public Dvigalo(int id)
     {
         Id = id;
-        TrenutnoNadstropje = 0; // Vsa dvigala so na začetku v pritličju
+        TrenutnoNadstropje = 0; 
         Zahteve = new Queue<(int, int, int)>();
         Kapaciteta = 10;
         TrenutnaObremenitev = 0;
@@ -105,7 +104,6 @@ public class Dvigalo
 
         var (izNadstropja, ciljnoNadstropje, steviloPotnikov) = Zahteve.Peek();
 
-        // 1. Premik proti potnikom
         if (!pobralPotnike)
         {
             if (TrenutnoNadstropje < izNadstropja)
@@ -120,7 +118,6 @@ public class Dvigalo
             }
             else
             {
-                // Pobere potnike
                 if (LahkoSprejmePotnike(steviloPotnikov))
                 {
                     TrenutnaObremenitev += steviloPotnikov;
@@ -131,7 +128,6 @@ public class Dvigalo
             }
         }
 
-        // 2. Premik proti ciljnemu nadstropju
         if (pobralPotnike)
         {
             if (TrenutnoNadstropje < ciljPotnikov)
@@ -146,16 +142,14 @@ public class Dvigalo
             }
             else
             {
-                // Spusti potnike
                 TrenutnaObremenitev -= steviloPotnikov;
                 Console.WriteLine($"Dvigalo {Id} izpustilo potnike v nadstropju {ciljPotnikov}.");
                 Zahteve.Dequeue();
                 pobralPotnike = false;
-                ciljPotnikov = -1; // Resetiramo cilj
+                ciljPotnikov = -1; 
             }
         }
 
-        // 3. Če so še potniki, nadaljuje s prejšnjimi zahtevami
         if (TrenutnaObremenitev > 0 && Zahteve.Count > 0)
         {
             var naslednjaZahteva = Zahteve.Peek();
